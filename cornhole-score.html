@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#1a1410" />
+  <title>Cornhole Scorekeeper</title>
+  <style>
+    :root {
+      --bg: #1a1410;
+      --panel: #2a211c;
+      --panel-2: #342820;
+      --text: #f4ece4;
+      --muted: #b9a89a;
+      --red: #c23b2e;
+      --red-d: #8e241b;
+      --blue: #2b6cb0;
+      --blue-d: #1d4e80;
+      --gold: #d4a017;
+      --ok: #2f7d4a;
+      --danger: #a33;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      user-select: none;
+    }
+    body {
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    header {
+      text-align: center;
+      padding: 12px 16px 6px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+    }
+    header p {
+      margin: 4px 0 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 14px 12px;
+      flex-wrap: wrap;
+    }
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--panel);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      flex: 1;
+      min-width: 210px;
+    }
+    .rule input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--gold);
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-text {
+      background: var(--panel);
+      color: var(--text);
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .btn-text:active { transform: scale(0.97); }
+    .boards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 0 10px 12px;
+    }
+    .team {
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 12px 10px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      min-height: 0;
+    }
+    .team.red { box-shadow: inset 0 3px 0 var(--red); }
+    .team.blue { box-shadow: inset 0 3px 0 var(--blue); }
+    .team.winner {
+      outline: 2px solid var(--gold);
+    }
+    .name {
+      width: 100%;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px dashed #5a4a40;
+      color: var(--text);
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 4px 4px 6px;
+      margin-bottom: 6px;
+    }
+    .name:focus { outline: none; border-bottom-color: var(--gold); }
+    .score {
+      font-size: clamp(3.4rem, 18vw, 5.2rem);
+      font-weight: 800;
+      line-height: 1;
+      text-align: center;
+      padding: 8px 0 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    .team.red .score { color: #f07a70; }
+    .team.blue .score { color: #7eb6f0; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    button.pt {
+      border: 0;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.35rem;
+      min-height: 64px;
+      cursor: pointer;
+    }
+    button.pt:active { transform: scale(0.96); filter: brightness(0.9); }
+    .team.red .plus { background: var(--red); }
+    .team.red .plus.three { background: var(--red-d); }
+    .team.blue .plus { background: var(--blue); }
+    .team.blue .plus.three { background: var(--blue-d); }
+    button.minus {
+      background: #3d332c;
+      color: var(--muted);
+      font-size: 1.15rem;
+      min-height: 48px;
+    }
+    .status {
+      text-align: center;
+      min-height: 1.4em;
+      padding: 0 14px 10px;
+      font-size: 0.95rem;
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .hint {
+      padding: 0 16px 20px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      text-align: center;
+    }
+    .log {
+      margin: 0 12px 18px;
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 10px 12px;
+      max-height: 140px;
+      overflow-y: auto;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .log div { padding: 2px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cornhole Scorekeeper</h1>
+    <p>Tap +1 for the board, +3 for the hole</p>
+  </header>
+
+  <div class="controls">
+    <label class="rule">
+      <input type="checkbox" id="bustRule" />
+      Over 21 resets that team to 11
+    </label>
+    <div class="actions">
+      <button class="btn-text" id="undoBtn" type="button">Undo</button>
+      <button class="btn-text" id="resetBtn" type="button">New Game</button>
+    </div>
+  </div>
+
+  <div class="boards">
+    <section class="team red" id="teamA">
+      <input class="name" id="nameA" value="Team Red" maxlength="18" aria-label="Team A name" />
+      <div class="score" id="scoreA">0</div>
+      <div class="row">
+        <button class="pt plus" data-team="A" data-pts="1" type="button">+1</button>
+        <button class="pt plus three" data-team="A" data-pts="3" type="button">+3</button>
+      </div>
+      <div class="row">
+        <button class="pt minus" data-team="A" data-pts="-1" type="button">−1</button>
+        <button class="pt minus" data-team="A" data-pts="-3" type="button">−3</button>
+      </div>
+    </section>
+    <section class="team blue" id="teamB">
+      <input class="name" id="nameB" value="Team Blue" maxlength="18" aria-label="Team B name" />
+      <div class="score" id="scoreB">0</div>
+      <div class="row">
+        <button class="pt plus" data-team="B" data-pts="1" type="button">+1</button>
+        <button class="pt plus three" data-team="B" data-pts="3" type="button">+3</button>
+      </div>
+      <div class="row">
+        <button class="pt minus" data-team="B" data-pts="-1" type="button">−1</button>
+        <button class="pt minus" data-team="B" data-pts="-3" type="button">−3</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="status" id="status"></div>
+  <div class="log" id="log" aria-live="polite"></div>
+  <p class="hint">
+    Add this page to your Home Screen for full-screen use. Scores are saved on this device.
+    Official play often uses cancellation by inning; this keeper adds points as you tap them.
+  </p>
+
+  <script>
+    const state = {
+      A: 0,
+      B: 0,
+      history: [],
+      bust: false
+    };
+
+    const els = {
+      scoreA: document.getElementById("scoreA"),
+      scoreB: document.getElementById("scoreB"),
+      nameA: document.getElementById("nameA"),
+      nameB: document.getElementById("nameB"),
+      bustRule: document.getElementById("bustRule"),
+      status: document.getElementById("status"),
+      log: document.getElementById("log"),
+      teamA: document.getElementById("teamA"),
+      teamB: document.getElementById("teamB")
+    };
+
+    function buzz() {
+      if (navigator.vibrate) navigator.vibrate(12);
+    }
+
+    function nameOf(team) {
+      return team === "A" ? (els.nameA.value.trim() || "Team Red") : (els.nameB.value.trim() || "Team Blue");
+    }
+
+    function render() {
+      els.scoreA.textContent = state.A;
+      els.scoreB.textContent = state.B;
+      els.teamA.classList.toggle("winner", !state.bust && state.A >= 21 && state.A > state.B);
+      els.teamB.classList.toggle("winner", !state.bust && state.B >= 21 && state.B > state.A);
+      if (state.bust) {
+        els.teamA.classList.toggle("winner", state.A === 21 && state.A > state.B);
+        els.teamB.classList.toggle("winner", state.B === 21 && state.B > state.A);
+      }
+      save();
+    }
+
+    function addLog(text) {
+      const row = document.createElement("div");
+      row.textContent = text;
+      els.log.prepend(row);
+      while (els.log.children.length > 12) els.log.removeChild(els.log.lastChild);
+    }
+
+    function applyPoints(team, pts, fromUndo) {
+      const before = state[team];
+      let after = before + pts;
+      if (after < 0) after = 0;
+
+      let busted = false;
+      if (pts > 0 && state.bust && after > 21) {
+        after = 11;
+        busted = true;
+      }
+
+      state[team] = after;
+      if (!fromUndo) {
+        state.history.push({ team, pts, before, after, busted });
+        if (state.history.length > 40) state.history.shift();
+        const verb = pts > 0 ? "+" + pts : String(pts);
+        let msg = nameOf(team) + " " + verb + "  (" + before + " → " + after + ")";
+        if (busted) {
+          msg += "  • over 21, reset to 11";
+          els.status.textContent = nameOf(team) + " went over 21 and reset to 11.";
+        } else if ((!state.bust && after >= 21) || (state.bust && after === 21)) {
+          els.status.textContent = nameOf(team) + " reached 21.";
+        } else {
+          els.status.textContent = "";
+        }
+        addLog(msg);
+      }
+      render();
+    }
+
+    function undo() {
+      const last = state.history.pop();
+      if (!last) {
+        els.status.textContent = "Nothing to undo.";
+        return;
+      }
+      state[last.team] = last.before;
+      els.status.textContent = "Undid last change for " + nameOf(last.team) + ".";
+      addLog("Undo: " + nameOf(last.team) + " returned to " + last.before);
+      render();
+      buzz();
+    }
+
+    function newGame() {
+      if (!confirm("Reset both scores to 0 and clear the log?")) return;
+      state.A = 0;
+      state.B = 0;
+      state.history = [];
+      els.log.innerHTML = "";
+      els.status.textContent = "New game.";
+      render();
+      buzz();
+    }
+
+    function save() {
+      try {
+        localStorage.setItem("cornhole-score-v1", JSON.stringify({
+          A: state.A,
+          B: state.B,
+          bust: state.bust,
+          nameA: els.nameA.value,
+          nameB: els.nameB.value,
+          history: state.history.slice(-20)
+        }));
+      } catch (e) {}
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem("cornhole-score-v1");
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        state.A = Number(data.A) || 0;
+        state.B = Number(data.B) || 0;
+        state.bust = !!data.bust;
+        state.history = Array.isArray(data.history) ? data.history : [];
+        if (data.nameA) els.nameA.value = data.nameA;
+        if (data.nameB) els.nameB.value = data.nameB;
+        els.bustRule.checked = state.bust;
+      } catch (e) {}
+    }
+
+    document.querySelectorAll("button.pt").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        applyPoints(btn.dataset.team, Number(btn.dataset.pts), false);
+        buzz();
+      });
+    });
+
+    els.bustRule.addEventListener("change", () => {
+      state.bust = els.bustRule.checked;
+      els.status.textContent = state.bust
+        ? "Over-21 rule on: a score above 21 becomes 11."
+        : "Over-21 rule off: 21 or more can win.";
+      save();
+    });
+
+    document.getElementById("undoBtn").addEventListener("click", undo);
+    document.getElementById("resetBtn").addEventListener("click", newGame);
+    els.nameA.addEventListener("change", save);
+    els.nameB.addEventListener("change", save);
+
+    load();
+    render();
+  </script>
+</body>
+</html>
